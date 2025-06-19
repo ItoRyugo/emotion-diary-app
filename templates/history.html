@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>感情分析履歴</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+      background: white;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 8px;
+      vertical-align: top;
+    }
+    th {
+      background-color: #ddd;
+    }
+    canvas {
+      margin: 30px auto;
+      display: block;
+    }
+    a {
+      display: block;
+      margin-top: 20px;
+      text-align: center;
+      color: #007bff;
+      font-weight: bold;
+    }
+    .emotion-cell {
+      white-space: pre-wrap;
+      font-size: 0.9em;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>過去の感情推移</h1>
+  <canvas id="emotionHistoryChart" width="800" height="400"></canvas>
+
+  <h2>ログ一覧</h2>
+  <table>
+    <tr>
+      <th>日時</th>
+      <th>日記本文</th>
+      <th>感情</th>
+      <th>コメント</th>
+    </tr>
+    {% for log in logs %}
+    <tr>
+      <td>{{ log.datetime }}</td>
+      <td>{{ log.text }}</td>
+      <td class="emotion-cell">
+        {% for key, value in log.emotions.items() %}
+          {{ key }}: {{ value }}%<br>
+        {% endfor %}
+      </td>
+      <td>{{ log.feedback }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <a href="/">トップへ戻る</a>
+
+  <script>
+  const logs = JSON.parse(`{{ logs | tojson | safe }}`);
+  const labels = logs.map(log => log.datetime);
+  const emotionsList = ["喜び", "怒り", "哀しみ", "楽しさ", "不安", "その他"];
+
+  const datasets = emotionsList.map(emotion => ({
+    label: emotion,
+    data: logs.map(log => log.emotions[emotion] || 0),
+    borderWidth: 2,
+    fill: false,
+    tension: 0.3
+  }));
+
+  new Chart(document.getElementById("emotionHistoryChart"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "感情の時間変化"
+        },
+        legend: {
+          position: "top"
+        }
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 100,
+          title: {
+            display: true,
+            text: "割合（%）"
+          }
+        }
+      }
+    }
+  });
+</script>

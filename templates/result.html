@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>感情分析結果</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f0f8ff;
+      border-radius: 10px;
+    }
+    h2, h3 {
+      text-align: center;
+    }
+    .feedback-box {
+      background-color: #fff3cd;
+      border-left: 6px solid #ffcc00;
+      padding: 15px;
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-top: 20px;
+      border-radius: 5px;
+    }
+    .mode-label {
+      text-align: center;
+      font-size: 0.9em;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    canvas {
+      margin: 0 auto;
+      display: block;
+    }
+    .nav-links {
+      margin-top: 30px;
+      text-align: center;
+    }
+    .nav-links a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>あなたの感情の割合</h2>
+  <canvas id="emotionChart" width="400" height="400"></canvas>
+
+  <div class="mode-label">
+    分析モード：{{ '厳しいモード' if mode == 'strict' else '優しいモード' }}
+  </div>
+
+  <div class="feedback-box" id="aiFeedback">
+    {{ feedback }}
+  </div>
+
+  <div class="nav-links">
+    <a href="/">もう一度分析する</a>
+    <a href="/history">履歴を見る</a>
+  </div>
+
+  <script>
+    const data = JSON.parse('{{ emotions | tojson | safe }}');
+    const labels = Object.keys(data);
+    const values = Object.values(data);
+
+    const ctx = document.getElementById('emotionChart').getContext('2d');
+    const emotionChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.6)',
+            'rgba(54, 162, 235, 0.6)',
+            'rgba(255, 206, 86, 0.6)',
+            'rgba(75, 192, 192, 0.6)',
+            'rgba(153, 102, 255, 0.6)',
+            'rgba(255, 159, 64, 0.6)'
+          ]
+        }]
+      }
+    });
+
+    // 読み上げ機能（SpeechSynthesis API）
+    const commentText = document.getElementById("aiFeedback").innerText;
+    const speech = new SpeechSynthesisUtterance(commentText);
+    speech.lang = "ja-JP";
+    speech.pitch = 1.0;
+    speech.rate = 1.0;
+    window.speechSynthesis.speak(speech);
+  </script>
+</body>
+</html>
